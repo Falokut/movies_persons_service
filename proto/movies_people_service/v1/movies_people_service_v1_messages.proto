@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package movies_people_service;
+option go_package = "movies_people_service/v1/protos";
+
+
+message GetMoviePeopleRequest {
+  string PeopleIDs = 1[json_name="people_ids"];
+}
+
+message Human {
+  string ID = 1[json_name="id"];
+  string fullnameRU =2[json_name="fullname_ru"];
+  string fullnameEN =3[json_name="fullname_en"];
+  int32 birthCountryID = 4[json_name="birth_country_id"];
+}
+
+message Humans {
+  map<string, Human> people = 1;
+}
+
+message UserErrorMessage { string message = 1 [ json_name = "message" ]; }
