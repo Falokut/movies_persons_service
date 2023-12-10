@@ -57,10 +57,9 @@ func convertRepoPeopleToProto(people []repository.People) *movies_people_service
 	protoPeople.People = make(map[string]*movies_people_service.Human, len(people))
 	for _, p := range people {
 		protoPeople.People[p.ID] = &movies_people_service.Human{
-			ID:             p.ID,
-			FullnameRU:     p.FullnameRU,
-			FullnameEN:     p.FullnameEN.String,
-			BirthCountryID: p.BirthCountryID,
+			ID:         p.ID,
+			FullnameRU: p.FullnameRU,
+			FullnameEN: p.FullnameEN.String,
 		}
 	}
 

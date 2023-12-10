@@ -57,16 +57,14 @@ func (r *postgreRepository) GetPeople(ctx context.Context, ids []string) ([]Peop
 	for rows.Next() {
 		id, nameRU := "", ""
 		nameEN := sql.NullString{}
-		var countryID int32
 
-		if err := rows.Scan(&id, &nameRU, &nameEN, &countryID); err != nil {
+		if err := rows.Scan(&id, &nameRU, &nameEN); err != nil {
 			return []People{}, err
 		}
 		people = append(people, People{
-			ID:             id,
-			FullnameRU:     nameRU,
-			FullnameEN:     nameEN,
-			BirthCountryID: countryID,
+			ID:         id,
+			FullnameRU: nameRU,
+			FullnameEN: nameEN,
 		})
 	}
 

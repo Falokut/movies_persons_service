@@ -16,10 +16,9 @@ type DBConfig struct {
 }
 
 type People struct {
-	ID             string         `db:"id" json:"id"`
-	FullnameRU     string         `db:"fullname_ru" json:"fullname_ru"`
-	FullnameEN     sql.NullString `db:"fullname_en" json:"fullname_en,omitempty"`
-	BirthCountryID int32          `db:"birth_country_id" json:"birth_country_id"`
+	ID         string         `db:"id" json:"id"`
+	FullnameRU string         `db:"fullname_ru" json:"fullname_ru"`
+	FullnameEN sql.NullString `db:"fullname_en" json:"fullname_en,omitempty"`
 }
 
 type Manager interface {

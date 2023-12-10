@@ -12,7 +12,6 @@ message Human {
   string ID = 1[json_name="id"];
   string fullnameRU =2[json_name="fullname_ru"];
   string fullnameEN =3[json_name="fullname_en"];
-  int32 birthCountryID = 4[json_name="birth_country_id"];
 }
 
 message Humans {

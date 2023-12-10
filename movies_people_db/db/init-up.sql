@@ -5,8 +5,7 @@ CREATE ROLE movies_people_service WITH
 CREATE TABLE people (
     id SERIAL PRIMARY KEY,
     fullname_ru TEXT NOT NULL,
-    fullname_en TEXT,
-    birth_country_id INT NOT NULL
+    fullname_en TEXT
 );
 
 GRANT SELECT ON people TO movies_people_service;

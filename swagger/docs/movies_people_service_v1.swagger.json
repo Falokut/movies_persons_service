@@ -79,10 +79,6 @@
         },
         "fullname_en": {
           "type": "string"
-        },
-        "birth_country_id": {
-          "type": "integer",
-          "format": "int32"
         }
       }
     },
