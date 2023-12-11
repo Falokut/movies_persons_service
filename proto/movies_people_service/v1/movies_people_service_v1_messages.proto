@@ -12,6 +12,9 @@ message Human {
   string ID = 1[json_name="id"];
   string fullnameRU =2[json_name="fullname_ru"];
   string fullnameEN =3[json_name="fullname_en"];
+  string birthday = 4;
+  string sex = 5;
+  string photoUrl = 6[json_name="photo_url"];
 }
 
 message Humans {

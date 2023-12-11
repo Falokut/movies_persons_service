@@ -14,7 +14,12 @@ import (
 type Config struct {
 	LogLevel        string `yaml:"log_level" env:"LOG_LEVEL"`
 	HealthcheckPort string `yaml:"healthcheck_port" env:"HEALTHCHECK_PORT"`
-	Listen          struct {
+
+	ImagesService struct {
+		BasePhotoUrl   string `yaml:"base_photo_url" env:"BASE_PHOTO_URL"`
+		ImagesCategory string `yaml:"pictures_category" env:"PICTURES_CATEGORY"`
+	} `yaml:"images_service"`
+	Listen struct {
 		Host string `yaml:"host" env:"HOST"`
 		Port string `yaml:"port" env:"PORT"`
 		Mode string `yaml:"server_mode" env:"SERVER_MODE"` // support GRPC, REST, BOTH

@@ -79,6 +79,15 @@
         },
         "fullname_en": {
           "type": "string"
+        },
+        "birthday": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "string"
+        },
+        "photo_url": {
+          "type": "string"
         }
       }
     },

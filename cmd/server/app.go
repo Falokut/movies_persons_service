@@ -80,11 +80,14 @@ func main() {
 			logger.Fatalf("Shutting down, can't run healthcheck endpoint %s", err.Error())
 		}
 	}()
-
+	imgService := service.NewImageService(service.ImageServiceConfig{
+		BasePhotoUrl: appCfg.ImagesService.BasePhotoUrl,
+		PicturesCategory: appCfg.ImagesService.ImagesCategory,
+	}, logger.Logger)
 	repoManager := repository.NewPeopleRepositoryManager(logger.Logger, repo,
 		cache, appCfg.MoviesPeoplesCache.MoviesPeoplesTTL, metric)
 	logger.Info("Service initializing")
-	service := service.NewMoviesPeoplesService(logger.Logger, repoManager)
+	service := service.NewMoviesPeoplesService(logger.Logger, repoManager, imgService)
 
 	logger.Info("Server initializing")
 	s := server.NewServer(logger.Logger, service)

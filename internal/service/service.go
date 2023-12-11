@@ -13,17 +13,20 @@ import (
 
 type MoviesPeoplesService struct {
 	movies_people_service.UnimplementedMoviesPeopleServiceV1Server
-	logger       *logrus.Logger
-	repoManager  repository.Manager
-	errorHandler errorHandler
+	logger        *logrus.Logger
+	imagesService *imageService
+	repoManager   repository.Manager
+	errorHandler  errorHandler
 }
 
-func NewMoviesPeoplesService(logger *logrus.Logger, repoManager repository.Manager) *MoviesPeoplesService {
+func NewMoviesPeoplesService(logger *logrus.Logger, repoManager repository.Manager,
+	imagesService *imageService) *MoviesPeoplesService {
 	errorHandler := newErrorHandler(logger)
 	return &MoviesPeoplesService{
-		logger:       logger,
-		repoManager:  repoManager,
-		errorHandler: errorHandler,
+		logger:        logger,
+		repoManager:   repoManager,
+		errorHandler:  errorHandler,
+		imagesService: imagesService,
 	}
 }
 
@@ -49,10 +52,11 @@ func (s *MoviesPeoplesService) GetPeople(ctx context.Context,
 		return nil, s.errorHandler.createErrorResponce(ErrInternal, err.Error())
 	}
 
-	return convertRepoPeopleToProto(people), err
+	return s.convertRepoPeopleToProto(ctx, people), err
 }
 
-func convertRepoPeopleToProto(people []repository.People) *movies_people_service.Humans {
+func (s *MoviesPeoplesService) convertRepoPeopleToProto(ctx context.Context,
+	people []repository.People) *movies_people_service.Humans {
 	protoPeople := &movies_people_service.Humans{}
 	protoPeople.People = make(map[string]*movies_people_service.Human, len(people))
 	for _, p := range people {
@@ -60,6 +64,9 @@ func convertRepoPeopleToProto(people []repository.People) *movies_people_service
 			ID:         p.ID,
 			FullnameRU: p.FullnameRU,
 			FullnameEN: p.FullnameEN.String,
+			Birthday:   p.Birthday.Time.Format("2006-01-02"),
+			Sex:        p.Sex.String,
+			PhotoUrl:   s.imagesService.GetPictureURL(ctx, p.PhotoID.String),
 		}
 	}
 

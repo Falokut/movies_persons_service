@@ -39,7 +39,7 @@ func (r *postgreRepository) Shutdown() {
 }
 
 func (r *postgreRepository) GetPeople(ctx context.Context, ids []string) ([]People, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "postgreRepository.GetPeoples")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgreRepository.GetPeople")
 	defer span.Finish()
 
 	query, args, err := sqlx.In(fmt.Sprintf("SELECT * FROM %s WHERE id IN(?) ORDER BY id",

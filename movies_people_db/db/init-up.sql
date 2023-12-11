@@ -5,7 +5,10 @@ CREATE ROLE movies_people_service WITH
 CREATE TABLE people (
     id SERIAL PRIMARY KEY,
     fullname_ru TEXT NOT NULL,
-    fullname_en TEXT
+    fullname_en TEXT,
+    birthday DATE,
+    sex TEXT,
+    photo_id TEXT
 );
 
 GRANT SELECT ON people TO movies_people_service;

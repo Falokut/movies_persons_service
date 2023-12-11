@@ -19,6 +19,9 @@ type People struct {
 	ID         string         `db:"id" json:"id"`
 	FullnameRU string         `db:"fullname_ru" json:"fullname_ru"`
 	FullnameEN sql.NullString `db:"fullname_en" json:"fullname_en,omitempty"`
+	Birthday   sql.NullTime   `db:"birthday" json:"birthday,omitempty"`
+	Sex        sql.NullString `db:"sex" json:"sex,omitempty"`
+	PhotoID    sql.NullString `db:"photo_id" json:"photo_id,omitempty"`
 }
 
 type Manager interface {
