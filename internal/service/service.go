@@ -5,14 +5,14 @@ import (
 	"strings"
 
 	"github.com/Falokut/grpc_errors"
-	"github.com/Falokut/movies_people_service/internal/repository"
-	movies_people_service "github.com/Falokut/movies_people_service/pkg/movies_people_service/v1/protos"
+	"github.com/Falokut/movies_persons_service/internal/repository"
+	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 )
 
 type MoviesPeoplesService struct {
-	movies_people_service.UnimplementedMoviesPeopleServiceV1Server
+	movies_persons_service.UnimplementedMoviesPersonsServiceV1Server
 	logger        *logrus.Logger
 	imagesService *imageService
 	repoManager   repository.Manager
@@ -31,7 +31,7 @@ func NewMoviesPeoplesService(logger *logrus.Logger, repoManager repository.Manag
 }
 
 func (s *MoviesPeoplesService) GetPeople(ctx context.Context,
-	in *movies_people_service.GetMoviePeopleRequest) (*movies_people_service.Humans, error) {
+	in *movies_persons_service.GetMoviePersonsRequest) (*movies_persons_service.Persons, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PeopleService.GetPeople")
 	defer span.Finish()
 	var err error
@@ -41,13 +41,13 @@ func (s *MoviesPeoplesService) GetPeople(ctx context.Context,
 		return nil, s.errorHandler.createErrorResponce(ErrInvalidFilter, err.Error())
 	}
 
-	in.PeopleIDs = strings.TrimSpace(strings.ReplaceAll(in.PeopleIDs, `"`, ""))
-	if in.PeopleIDs == "" {
-		return &movies_people_service.Humans{}, nil
+	in.PersonsIDs = strings.TrimSpace(strings.ReplaceAll(in.PersonsIDs, `"`, ""))
+	if in.PersonsIDs == "" {
+		return &movies_persons_service.Persons{}, nil
 	}
 
-	ids := strings.Split(in.PeopleIDs, ",")
-	people, err := s.repoManager.GetPeople(ctx, ids)
+	ids := strings.Split(in.PersonsIDs, ",")
+	people, err := s.repoManager.GetPersons(ctx, ids)
 	if err != nil {
 		return nil, s.errorHandler.createErrorResponce(ErrInternal, err.Error())
 	}
@@ -56,11 +56,11 @@ func (s *MoviesPeoplesService) GetPeople(ctx context.Context,
 }
 
 func (s *MoviesPeoplesService) convertRepoPeopleToProto(ctx context.Context,
-	people []repository.People) *movies_people_service.Humans {
-	protoPeople := &movies_people_service.Humans{}
-	protoPeople.People = make(map[string]*movies_people_service.Human, len(people))
+	people []repository.Person) *movies_persons_service.Persons {
+	protoPersons := &movies_persons_service.Persons{}
+	protoPersons.Persons = make(map[string]*movies_persons_service.Person, len(people))
 	for _, p := range people {
-		protoPeople.People[p.ID] = &movies_people_service.Human{
+		protoPersons.Persons[p.ID] = &movies_persons_service.Person{
 			ID:         p.ID,
 			FullnameRU: p.FullnameRU,
 			FullnameEN: p.FullnameEN.String,
@@ -70,5 +70,5 @@ func (s *MoviesPeoplesService) convertRepoPeopleToProto(ctx context.Context,
 		}
 	}
 
-	return protoPeople
+	return protoPersons
 }

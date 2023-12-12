@@ -1,8 +1,8 @@
 syntax= "proto3";
 
-package movies_people_service;
-import "movies_people_service_v1_messages.proto";
-option go_package = "movies_people_service/v1/protos";
+package movies_persons_service;
+import "movies_persons_service_v1_messages.proto";
+option go_package = "movies_persons_service/v1/protos";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
@@ -14,7 +14,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 
     info: {
-        title: "Movies people service";
+        title: "Movies persons service";
         version: "1.0";
         contact: {
             name: "Falokut";
@@ -46,10 +46,10 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 	}
 };
 
-service moviesPeopleServiceV1 {
-    rpc GetPeople(GetMoviePeopleRequest) returns(Humans) {
+service moviesPersonsServiceV1 {
+    rpc GetPersons(GetMoviePersonsRequest) returns(Persons) {
         option (google.api.http) = {
-            get: "/v1/people"
+            get: "/v1/persons"
         };
     }
 }

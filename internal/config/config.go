@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Falokut/movies_people_service/internal/repository"
-	"github.com/Falokut/movies_people_service/pkg/jaeger"
-	"github.com/Falokut/movies_people_service/pkg/metrics"
+	"github.com/Falokut/movies_persons_service/internal/repository"
+	"github.com/Falokut/movies_persons_service/pkg/jaeger"
+	"github.com/Falokut/movies_persons_service/pkg/metrics"
 	logging "github.com/Falokut/online_cinema_ticket_office.loggerwrapper"
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -31,12 +31,12 @@ type Config struct {
 	} `yaml:"prometheus"`
 
 	MoviesPeoplesCache struct {
-		Network          string        `yaml:"network" env:"MOVIES_PEOPLE_CACHE_NETWORK"`
-		Addr             string        `yaml:"addr" env:"MOVIES_PEOPLE_CACHE_ADDR"`
-		Password         string        `yaml:"password" env:"MOVIES_PEOPLE_CACHE_PASSWORD"`
-		DB               int           `yaml:"db" env:"MOVIES_PEOPLE_CACHE_DB"`
-		MoviesPeoplesTTL time.Duration `yaml:"movies_people_ttl"`
-	} `yaml:"movies_people_cache"`
+		Network          string        `yaml:"network" env:"MOVIES_PERSONS_CACHE_NETWORK"`
+		Addr             string        `yaml:"addr" env:"MOVIES_PERSONS_CACHE_ADDR"`
+		Password         string        `yaml:"password" env:"MOVIES_PERSONS_CACHE_PASSWORD"`
+		DB               int           `yaml:"db" env:"MOVIES_PERSONS_CACHE_DB"`
+		MoviesPersonsTTL time.Duration `yaml:"movies_persons_ttl"`
+	} `yaml:"movies_persons_cache"`
 
 	DBConfig     repository.DBConfig `yaml:"db_config"`
 	JaegerConfig jaeger.Config       `yaml:"jaeger"`

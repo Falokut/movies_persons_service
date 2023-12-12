@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Falokut/grpc_errors"
-	movies_people_service "github.com/Falokut/movies_people_service/pkg/movies_people_service/v1/protos"
+	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,7 +56,7 @@ func (e *errorHandler) createExtendedErrorResponce(err error, DeveloperMessage, 
 
 	extErr := status.New(grpc_errors.GetGrpcCode(err), msg)
 	if len(UserMessage) > 0 {
-		extErr, _ = extErr.WithDetails(&movies_people_service.UserErrorMessage{Message: UserMessage})
+		extErr, _ = extErr.WithDetails(&movies_persons_service.UserErrorMessage{Message: UserMessage})
 		if extErr == nil {
 			e.logger.Error(err)
 			return err

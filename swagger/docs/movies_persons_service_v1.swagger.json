@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Movies people service",
+    "title": "Movies persons service",
     "version": "1.0",
     "contact": {
       "name": "Falokut",
@@ -11,7 +11,7 @@
   },
   "tags": [
     {
-      "name": "moviesPeopleServiceV1"
+      "name": "moviesPersonsServiceV1"
     }
   ],
   "schemes": [
@@ -24,14 +24,14 @@
     "application/json"
   ],
   "paths": {
-    "/v1/people": {
+    "/v1/persons": {
       "get": {
-        "operationId": "moviesPeopleServiceV1_GetPeople",
+        "operationId": "moviesPersonsServiceV1_GetPersons",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/movies_people_serviceHumans"
+              "$ref": "#/definitions/movies_persons_servicePersons"
             }
           },
           "404": {
@@ -55,20 +55,20 @@
         },
         "parameters": [
           {
-            "name": "people_ids",
+            "name": "persons_ids",
             "in": "query",
             "required": false,
             "type": "string"
           }
         ],
         "tags": [
-          "moviesPeopleServiceV1"
+          "moviesPersonsServiceV1"
         ]
       }
     }
   },
   "definitions": {
-    "movies_people_serviceHuman": {
+    "movies_persons_servicePerson": {
       "type": "object",
       "properties": {
         "id": {
@@ -91,13 +91,13 @@
         }
       }
     },
-    "movies_people_serviceHumans": {
+    "movies_persons_servicePersons": {
       "type": "object",
       "properties": {
-        "people": {
+        "persons": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/movies_people_serviceHuman"
+            "$ref": "#/definitions/movies_persons_servicePerson"
           }
         }
       }

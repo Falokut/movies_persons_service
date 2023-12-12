@@ -15,10 +15,10 @@ type postgreRepository struct {
 }
 
 const (
-	peopleTableName = "people"
+	personsTableName = "persons"
 )
 
-func NewPeopleRepository(db *sqlx.DB) *postgreRepository {
+func NewPersonsRepository(db *sqlx.DB) *postgreRepository {
 	return &postgreRepository{db: db}
 }
 
@@ -38,35 +38,35 @@ func (r *postgreRepository) Shutdown() {
 	r.db.Close()
 }
 
-func (r *postgreRepository) GetPeople(ctx context.Context, ids []string) ([]People, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "postgreRepository.GetPeople")
+func (r *postgreRepository) GetPersons(ctx context.Context, ids []string) ([]Person, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgreRepository.GetPersons")
 	defer span.Finish()
 
 	query, args, err := sqlx.In(fmt.Sprintf("SELECT * FROM %s WHERE id IN(?) ORDER BY id",
-		peopleTableName), ids)
+		personsTableName), ids)
 	if err != nil {
-		return []People{}, err
+		return []Person{}, err
 	}
 	query = sqlx.Rebind(sqlx.DOLLAR, query)
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return []People{}, err
+		return []Person{}, err
 	}
 
-	var people = make([]People, 0, len(ids))
+	var Persons = make([]Person, 0, len(ids))
 	for rows.Next() {
 		id, nameRU := "", ""
 		nameEN := sql.NullString{}
 
 		if err := rows.Scan(&id, &nameRU, &nameEN); err != nil {
-			return []People{}, err
+			return []Person{}, err
 		}
-		people = append(people, People{
+		Persons = append(Persons, Person{
 			ID:         id,
 			FullnameRU: nameRU,
 			FullnameEN: nameEN,
 		})
 	}
 
-	return people, nil
+	return Persons, nil
 }

@@ -15,7 +15,7 @@ type DBConfig struct {
 	SSLMode  string `yaml:"ssl_mode" env:"DB_SSL_MODE"`
 }
 
-type People struct {
+type Person struct {
 	ID         string         `db:"id" json:"id"`
 	FullnameRU string         `db:"fullname_ru" json:"fullname_ru"`
 	FullnameEN sql.NullString `db:"fullname_en" json:"fullname_en,omitempty"`
@@ -25,14 +25,14 @@ type People struct {
 }
 
 type Manager interface {
-	GetPeople(ctx context.Context, ids []string) ([]People, error)
+	GetPersons(ctx context.Context, ids []string) ([]Person, error)
 }
 
-type PeopleRepository interface {
-	GetPeople(ctx context.Context, ids []string) ([]People, error)
+type PersonsRepository interface {
+	GetPersons(ctx context.Context, ids []string) ([]Person, error)
 }
 
-type PeopleCache interface {
-	CachePeople(ctx context.Context, people []People, TTL time.Duration) error
-	GetPeople(ctx context.Context, ids []string) ([]People, []string, error)
+type PersonsCache interface {
+	CachePersons(ctx context.Context, people []Person, TTL time.Duration) error
+	GetPersons(ctx context.Context, ids []string) ([]Person, []string, error)
 }

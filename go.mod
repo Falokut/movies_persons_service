@@ -1,4 +1,4 @@
-module github.com/Falokut/movies_people_service
+module github.com/Falokut/movies_persons_service
 
 go 1.21.4
 

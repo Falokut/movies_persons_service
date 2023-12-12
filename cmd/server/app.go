@@ -9,12 +9,12 @@ import (
 
 	server "github.com/Falokut/grpc_rest_server"
 	"github.com/Falokut/healthcheck"
-	"github.com/Falokut/movies_people_service/internal/config"
-	"github.com/Falokut/movies_people_service/internal/repository"
-	"github.com/Falokut/movies_people_service/internal/service"
-	jaegerTracer "github.com/Falokut/movies_people_service/pkg/jaeger"
-	"github.com/Falokut/movies_people_service/pkg/metrics"
-	movies_people_service "github.com/Falokut/movies_people_service/pkg/movies_people_service/v1/protos"
+	"github.com/Falokut/movies_persons_service/internal/config"
+	"github.com/Falokut/movies_persons_service/internal/repository"
+	"github.com/Falokut/movies_persons_service/internal/service"
+	jaegerTracer "github.com/Falokut/movies_persons_service/pkg/jaeger"
+	"github.com/Falokut/movies_persons_service/pkg/metrics"
+	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
 	logging "github.com/Falokut/online_cinema_ticket_office.loggerwrapper"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/opentracing/opentracing-go"
@@ -62,10 +62,10 @@ func main() {
 	}
 
 	logger.Info("Repository initializing")
-	repo := repository.NewPeopleRepository(database)
+	repo := repository.NewPersonsRepository(database)
 	defer repo.Shutdown()
 
-	cache, err := repository.NewPeopleCache(logger.Logger, getCacheOptions(appCfg))
+	cache, err := repository.NewPersonsCache(logger.Logger, getCacheOptions(appCfg))
 	if err != nil {
 		logger.Fatalf("Shutting down, connection to the cache is not established: %s", err.Error())
 	}
@@ -81,11 +81,11 @@ func main() {
 		}
 	}()
 	imgService := service.NewImageService(service.ImageServiceConfig{
-		BasePhotoUrl: appCfg.ImagesService.BasePhotoUrl,
+		BasePhotoUrl:     appCfg.ImagesService.BasePhotoUrl,
 		PicturesCategory: appCfg.ImagesService.ImagesCategory,
 	}, logger.Logger)
-	repoManager := repository.NewPeopleRepositoryManager(logger.Logger, repo,
-		cache, appCfg.MoviesPeoplesCache.MoviesPeoplesTTL, metric)
+	repoManager := repository.NewPersonsRepositoryManager(logger.Logger, repo,
+		cache, appCfg.MoviesPeoplesCache.MoviesPersonsTTL, metric)
 	logger.Info("Service initializing")
 	service := service.NewMoviesPeoplesService(logger.Logger, repoManager, imgService)
 
@@ -105,13 +105,13 @@ func getListenServerConfig(cfg *config.Config) server.Config {
 		Mode:        cfg.Listen.Mode,
 		Host:        cfg.Listen.Host,
 		Port:        cfg.Listen.Port,
-		ServiceDesc: &movies_people_service.MoviesPeopleServiceV1_ServiceDesc,
+		ServiceDesc: &movies_persons_service.MoviesPersonsServiceV1_ServiceDesc,
 		RegisterRestHandlerServer: func(ctx context.Context, mux *runtime.ServeMux, service any) error {
-			serv, ok := service.(movies_people_service.MoviesPeopleServiceV1Server)
+			serv, ok := service.(movies_persons_service.MoviesPersonsServiceV1Server)
 			if !ok {
 				return errors.New("can't convert")
 			}
-			return movies_people_service.RegisterMoviesPeopleServiceV1HandlerServer(context.Background(),
+			return movies_persons_service.RegisterMoviesPersonsServiceV1HandlerServer(context.Background(),
 				mux, serv)
 		},
 	}

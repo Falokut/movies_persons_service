@@ -9,7 +9,7 @@
 
 # Configuration
 
-1. [Configure movies_people_db](movies_people_db/README.md#Configuration)
+1. [Configure movies_persons_db](movies_persons_db/README.md#Configuration)
 2. Create .env on project root dir  
 Example env:
 ```env
@@ -23,7 +23,7 @@ DB_PASSWORD=Password
 The service uses Prometheus and Jaeger and supports distribution tracing
 
 # Docs
-[Swagger docs](swagger/docs/movies_people_service_v1.swagger.json)
+[Swagger docs](swagger/docs/movies_persons_service_v1.swagger.json)
 
 # Author
 

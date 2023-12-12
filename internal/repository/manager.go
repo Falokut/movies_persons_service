@@ -17,60 +17,60 @@ type CacheMetric interface {
 }
 
 type RepositoryManager struct {
-	logger    *logrus.Logger
-	repo      PeopleRepository
-	cache     PeopleCache
-	peopleTTL time.Duration
-	metric    CacheMetric
+	logger     *logrus.Logger
+	repo       PersonsRepository
+	cache      PersonsCache
+	personsTTL time.Duration
+	metric     CacheMetric
 }
 
-func NewPeopleRepositoryManager(logger *logrus.Logger, repo PeopleRepository, cache PeopleCache,
-	peopleTTL time.Duration, metric CacheMetric) *RepositoryManager {
+func NewPersonsRepositoryManager(logger *logrus.Logger, repo PersonsRepository, cache PersonsCache,
+	personsTTL time.Duration, metric CacheMetric) *RepositoryManager {
 	return &RepositoryManager{
-		logger:    logger,
-		repo:      repo,
-		cache:     cache,
-		peopleTTL: peopleTTL,
-		metric:    metric,
+		logger:     logger,
+		repo:       repo,
+		cache:      cache,
+		personsTTL: personsTTL,
+		metric:     metric,
 	}
 }
 
-func (m *RepositoryManager) GetPeople(ctx context.Context, ids []string) ([]People, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "RepositoryManager.GetPeoples")
+func (m *RepositoryManager) GetPersons(ctx context.Context, ids []string) ([]Person, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "RepositoryManager.GetPersonss")
 	defer span.Finish()
 
-	var findedPeoples = make([]People, 0, len(ids))
-	people, notFoundedIds, err := m.cache.GetPeople(ctx, ids)
+	var findedPersonss = make([]Person, 0, len(ids))
+	persons, notFoundedIds, err := m.cache.GetPersons(ctx, ids)
 	if errors.Is(err, redis.Nil) {
-		m.metric.IncCacheMiss("GetPeoples", len(ids))
+		m.metric.IncCacheMiss("GetPersonss", len(ids))
 	} else if err != nil {
 		m.logger.Error(err)
 	}
 
-	if len(people) == len(ids) {
-		m.metric.IncCacheHits("GetPeoples", len(ids))
-		return people, nil
+	if len(persons) == len(ids) {
+		m.metric.IncCacheHits("GetPersonss", len(ids))
+		return persons, nil
 	}
 
-	if len(people) != 0 && err == nil {
-		m.metric.IncCacheHits("GetPeoples", len(ids)-len(notFoundedIds))
-		m.metric.IncCacheMiss("GetPeoples", len(notFoundedIds))
+	if len(persons) != 0 && err == nil {
+		m.metric.IncCacheHits("GetPersonss", len(ids)-len(notFoundedIds))
+		m.metric.IncCacheMiss("GetPersonss", len(notFoundedIds))
 		ids = notFoundedIds
 	}
-	findedPeoples = append(findedPeoples, people...)
+	findedPersonss = append(findedPersonss, persons...)
 
-	people, err = m.repo.GetPeople(ctx, ids)
+	persons, err = m.repo.GetPersons(ctx, ids)
 	if errors.Is(err, sql.ErrNoRows) {
-		return people, nil
+		return persons, nil
 	}
 	if err != nil {
-		return []People{}, err
+		return []Person{}, err
 	}
 
 	go func() {
-		m.cache.CachePeople(context.Background(), people, m.peopleTTL)
+		m.cache.CachePersons(context.Background(), persons, m.personsTTL)
 	}()
 
-	findedPeoples = append(findedPeoples, people...)
-	return findedPeoples, nil
+	findedPersonss = append(findedPersonss, persons...)
+	return findedPersonss, nil
 }

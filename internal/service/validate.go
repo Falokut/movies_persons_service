@@ -4,14 +4,14 @@ import (
 	"errors"
 	"regexp"
 
-	movies_people_service "github.com/Falokut/movies_people_service/pkg/movies_people_service/v1/protos"
+	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
 )
 
 var ErrInvalidFilter = errors.New("invalid filter value, filter must contain only digits and commas")
 
-func validateFilter(filter *movies_people_service.GetMoviePeopleRequest) error {
-	if filter.GetPeopleIDs() != "" {
-		if err := checkFilterParam(filter.PeopleIDs); err != nil {
+func validateFilter(filter *movies_persons_service.GetMoviePersonsRequest) error {
+	if filter.GetPersonsIDs() != "" {
+		if err := checkFilterParam(filter.PersonsIDs); err != nil {
 			return err
 		}
 	}

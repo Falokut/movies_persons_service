@@ -1,4 +1,4 @@
-project_name = movies_people_service
+project_name = movies_persons_service
 api_version = v1
 protoc_out_dir = pkg/$(project_name)/$(api_version)/protos
 protoc_out_dir_win = pkg\$(project_name)\$(api_version)\protos
