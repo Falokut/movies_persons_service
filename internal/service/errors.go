@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/Falokut/grpc_errors"
-	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,6 +34,16 @@ func newErrorHandler(logger *logrus.Logger) errorHandler {
 	}
 }
 
+func (e *errorHandler) createErrorResponceWithSpan(span opentracing.Span, err error, developerMessage string) error {
+	if err == nil {
+		return nil
+	}
+
+	span.SetTag("grpc.status", grpc_errors.GetGrpcCode(err))
+	ext.LogError(span, err)
+	return e.createErrorResponce(err, developerMessage)
+}
+
 func (e *errorHandler) createErrorResponce(err error, developerMessage string) error {
 	var msg string
 	if len(developerMessage) == 0 {
@@ -44,27 +55,6 @@ func (e *errorHandler) createErrorResponce(err error, developerMessage string) e
 	err = status.Error(grpc_errors.GetGrpcCode(err), msg)
 	e.logger.Error(err)
 	return err
-}
-
-func (e *errorHandler) createExtendedErrorResponce(err error, DeveloperMessage, UserMessage string) error {
-	var msg string
-	if DeveloperMessage == "" {
-		msg = err.Error()
-	} else {
-		msg = fmt.Sprintf("%s. error: %v", DeveloperMessage, err)
-	}
-
-	extErr := status.New(grpc_errors.GetGrpcCode(err), msg)
-	if len(UserMessage) > 0 {
-		extErr, _ = extErr.WithDetails(&movies_persons_service.UserErrorMessage{Message: UserMessage})
-		if extErr == nil {
-			e.logger.Error(err)
-			return err
-		}
-	}
-
-	e.logger.Error(extErr)
-	return extErr.Err()
 }
 
 func init() {

@@ -87,7 +87,7 @@ func main() {
 	repoManager := repository.NewPersonsRepositoryManager(logger.Logger, repo,
 		cache, appCfg.MoviesPeoplesCache.MoviesPersonsTTL, metric)
 	logger.Info("Service initializing")
-	service := service.NewMoviesPeoplesService(logger.Logger, repoManager, imgService)
+	service := service.NewMoviesPersonsService(logger.Logger, repoManager, imgService)
 
 	logger.Info("Server initializing")
 	s := server.NewServer(logger.Logger, service)

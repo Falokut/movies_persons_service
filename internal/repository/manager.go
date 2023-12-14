@@ -61,7 +61,7 @@ func (m *RepositoryManager) GetPersons(ctx context.Context, ids []string) ([]Per
 
 	persons, err = m.repo.GetPersons(ctx, ids)
 	if errors.Is(err, sql.ErrNoRows) {
-		return persons, nil
+		return []Person{}, ErrNotFound
 	}
 	if err != nil {
 		return []Person{}, err

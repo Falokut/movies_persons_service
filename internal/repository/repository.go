@@ -3,8 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
+
+var ErrNotFound = errors.New("entity not found")
 
 type DBConfig struct {
 	Host     string `yaml:"host" env:"DB_HOST"`

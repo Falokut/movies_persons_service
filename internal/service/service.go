@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"github.com/Falokut/grpc_errors"
 	"github.com/Falokut/movies_persons_service/internal/repository"
 	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
 )
 
-type MoviesPeoplesService struct {
+type MoviesPersonsService struct {
 	movies_persons_service.UnimplementedMoviesPersonsServiceV1Server
 	logger        *logrus.Logger
 	imagesService *imageService
@@ -19,10 +20,10 @@ type MoviesPeoplesService struct {
 	errorHandler  errorHandler
 }
 
-func NewMoviesPeoplesService(logger *logrus.Logger, repoManager repository.Manager,
-	imagesService *imageService) *MoviesPeoplesService {
+func NewMoviesPersonsService(logger *logrus.Logger, repoManager repository.Manager,
+	imagesService *imageService) *MoviesPersonsService {
 	errorHandler := newErrorHandler(logger)
-	return &MoviesPeoplesService{
+	return &MoviesPersonsService{
 		logger:        logger,
 		repoManager:   repoManager,
 		errorHandler:  errorHandler,
@@ -30,15 +31,13 @@ func NewMoviesPeoplesService(logger *logrus.Logger, repoManager repository.Manag
 	}
 }
 
-func (s *MoviesPeoplesService) GetPeople(ctx context.Context,
+func (s *MoviesPersonsService) GetPersons(ctx context.Context,
 	in *movies_persons_service.GetMoviePersonsRequest) (*movies_persons_service.Persons, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PeopleService.GetPeople")
 	defer span.Finish()
-	var err error
-	defer span.SetTag("grpc.status", grpc_errors.GetGrpcCode(err))
 
 	if err := validateFilter(in); err != nil {
-		return nil, s.errorHandler.createErrorResponce(ErrInvalidFilter, err.Error())
+		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrInvalidFilter, err.Error())
 	}
 
 	in.PersonsIDs = strings.TrimSpace(strings.ReplaceAll(in.PersonsIDs, `"`, ""))
@@ -48,14 +47,18 @@ func (s *MoviesPeoplesService) GetPeople(ctx context.Context,
 
 	ids := strings.Split(in.PersonsIDs, ",")
 	people, err := s.repoManager.GetPersons(ctx, ids)
+	if errors.Is(err, repository.ErrNotFound) {
+		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrNotFound, "")
+	}
 	if err != nil {
-		return nil, s.errorHandler.createErrorResponce(ErrInternal, err.Error())
+		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrInternal, err.Error())
 	}
 
-	return s.convertRepoPeopleToProto(ctx, people), err
+	span.SetTag("grpc.status", codes.OK)
+	return s.convertRepoPeopleToProto(ctx, people), nil
 }
 
-func (s *MoviesPeoplesService) convertRepoPeopleToProto(ctx context.Context,
+func (s *MoviesPersonsService) convertRepoPeopleToProto(ctx context.Context,
 	people []repository.Person) *movies_persons_service.Persons {
 	protoPersons := &movies_persons_service.Persons{}
 	protoPersons.Persons = make(map[string]*movies_persons_service.Person, len(people))
