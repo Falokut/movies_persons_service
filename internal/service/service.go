@@ -33,24 +33,21 @@ func NewMoviesPersonsService(logger *logrus.Logger, repoManager repository.Manag
 
 func (s *MoviesPersonsService) GetPersons(ctx context.Context,
 	in *movies_persons_service.GetMoviePersonsRequest) (*movies_persons_service.Persons, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "PeopleService.GetPeople")
+	span, _ := opentracing.StartSpanFromContext(ctx, "MoviesPersonsService.GetPersons")
 	defer span.Finish()
-
-	if err := validateFilter(in); err != nil {
-		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrInvalidFilter, err.Error())
-	}
 
 	in.PersonsIDs = strings.TrimSpace(strings.ReplaceAll(in.PersonsIDs, `"`, ""))
 	if in.PersonsIDs == "" {
-		return &movies_persons_service.Persons{}, nil
+		return &movies_persons_service.Persons{}, s.errorHandler.createErrorResponceWithSpan(span, ErrInvalidArgument, "persons_ids mustn't be empty")
+	} else if err := checkParam(in.PersonsIDs); err != nil {
+		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrInvalidFilter, err.Error())
 	}
 
 	ids := strings.Split(in.PersonsIDs, ",")
 	people, err := s.repoManager.GetPersons(ctx, ids)
 	if errors.Is(err, repository.ErrNotFound) {
 		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrNotFound, "")
-	}
-	if err != nil {
+	} else if err != nil {
 		return nil, s.errorHandler.createErrorResponceWithSpan(span, ErrInternal, err.Error())
 	}
 

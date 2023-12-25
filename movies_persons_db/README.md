@@ -3,7 +3,6 @@
 Example env for postgre
 ```env
 POSTGRES_USER=postgres
-PGUSER=postgres
 POSTGRES_PASSWORD=YourPassword
 ```	
 2. Change passwords for roles inside init-up.sql in db folder

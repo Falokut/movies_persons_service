@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -10,7 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type postgreRepository struct {
+type personsRepository struct {
 	db *sqlx.DB
 }
 
@@ -18,55 +17,35 @@ const (
 	personsTableName = "persons"
 )
 
-func NewPersonsRepository(db *sqlx.DB) *postgreRepository {
-	return &postgreRepository{db: db}
+func NewPersonsRepository(db *sqlx.DB) *personsRepository {
+	return &personsRepository{db: db}
 }
 
 func NewPostgreDB(cfg DBConfig) (*sqlx.DB, error) {
 	conStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.DBName, cfg.SSLMode)
-	db, err := sqlx.Connect("pgx", conStr)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	return sqlx.Connect("pgx", conStr)
 }
 
-func (r *postgreRepository) Shutdown() {
-	r.db.Close()
+func (r *personsRepository) Shutdown() error {
+	return r.db.Close()
 }
 
-func (r *postgreRepository) GetPersons(ctx context.Context, ids []string) ([]Person, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "postgreRepository.GetPersons")
+func (r *personsRepository) GetPersons(ctx context.Context, ids []string) ([]Person, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "personsRepository.GetPersons")
 	defer span.Finish()
 
-	query, args, err := sqlx.In(fmt.Sprintf("SELECT * FROM %s WHERE id IN(?) ORDER BY id",
-		personsTableName), ids)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id=ANY($1) ORDER BY id",
+		personsTableName)
+
+	var persons []Person
+	err := r.db.SelectContext(ctx, &persons, query, ids)
 	if err != nil {
 		return []Person{}, err
-	}
-	query = sqlx.Rebind(sqlx.DOLLAR, query)
-	rows, err := r.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return []Person{}, err
+	} else if len(persons) == 0 {
+		return []Person{}, ErrNotFound
 	}
 
-	var Persons = make([]Person, 0, len(ids))
-	for rows.Next() {
-		id, nameRU := "", ""
-		nameEN := sql.NullString{}
-
-		if err := rows.Scan(&id, &nameRU, &nameEN); err != nil {
-			return []Person{}, err
-		}
-		Persons = append(Persons, Person{
-			ID:         id,
-			FullnameRU: nameRU,
-			FullnameEN: nameEN,
-		})
-	}
-
-	return Persons, nil
+	return persons, nil
 }

@@ -13,41 +13,41 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-type peronsCache struct {
+type personsCache struct {
 	rdb    *redis.Client
 	logger *logrus.Logger
 }
 
-func (c *peronsCache) PingContext(ctx context.Context) error {
+func (c *personsCache) PingContext(ctx context.Context) error {
 	if err := c.rdb.Ping(ctx).Err(); err != nil {
-		return fmt.Errorf("error while pinging genres cache: %w", err)
+		return fmt.Errorf("error while pinging persons cache: %w", err)
 	}
 
 	return nil
 }
 
-func (c *peronsCache) Shutdown() {
-	c.rdb.Close()
+func (c *personsCache) Shutdown() error {
+	return c.rdb.Close()
 }
 
-func NewPersonsCache(logger *logrus.Logger, opt *redis.Options) (*peronsCache, error) {
-	logger.Info("Creating genres cache client")
+func NewPersonsCache(logger *logrus.Logger, opt *redis.Options) (*personsCache, error) {
+	logger.Info("Creating persons cache client")
 	rdb := redis.NewClient(opt)
 	if rdb == nil {
 		return nil, errors.New("can't create new redis client")
 	}
 
-	logger.Info("Pinging genres cache client")
+	logger.Info("Pinging persons cache client")
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, fmt.Errorf("connection is not established: %s", err.Error())
 	}
 
-	return &peronsCache{rdb: rdb, logger: logger}, nil
+	return &personsCache{rdb: rdb, logger: logger}, nil
 }
 
-func (c *peronsCache) CachePersons(ctx context.Context, persons []Person, ttl time.Duration) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "peopleCache.CachePersons")
+func (c *personsCache) CachePersons(ctx context.Context, persons []Person, ttl time.Duration) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "personsCache.CachePersons")
 	defer span.Finish()
 
 	tx := c.rdb.Pipeline()
@@ -62,8 +62,8 @@ func (c *peronsCache) CachePersons(ctx context.Context, persons []Person, ttl ti
 	return err
 }
 
-func (c *peronsCache) GetPersons(ctx context.Context, ids []string) ([]Person, []string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "peopleCache.GetPersons")
+func (c *personsCache) GetPersons(ctx context.Context, ids []string) ([]Person, []string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "personsCache.GetPersons")
 	defer span.Finish()
 
 	var personsIDs = make(map[string]struct{}, len(ids))

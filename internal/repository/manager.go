@@ -36,25 +36,25 @@ func NewPersonsRepositoryManager(logger *logrus.Logger, repo PersonsRepository, 
 }
 
 func (m *RepositoryManager) GetPersons(ctx context.Context, ids []string) ([]Person, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "RepositoryManager.GetPersonss")
+	span, _ := opentracing.StartSpanFromContext(ctx, "RepositoryManager.GetPersons")
 	defer span.Finish()
 
 	var findedPersonss = make([]Person, 0, len(ids))
 	persons, notFoundedIds, err := m.cache.GetPersons(ctx, ids)
 	if errors.Is(err, redis.Nil) {
-		m.metric.IncCacheMiss("GetPersonss", len(ids))
+		m.metric.IncCacheMiss("GetPersons", len(ids))
 	} else if err != nil {
 		m.logger.Error(err)
 	}
 
 	if len(persons) == len(ids) {
-		m.metric.IncCacheHits("GetPersonss", len(ids))
+		m.metric.IncCacheHits("GetPersons", len(ids))
 		return persons, nil
 	}
 
 	if len(persons) != 0 && err == nil {
-		m.metric.IncCacheHits("GetPersonss", len(ids)-len(notFoundedIds))
-		m.metric.IncCacheMiss("GetPersonss", len(notFoundedIds))
+		m.metric.IncCacheHits("GetPersons", len(ids)-len(notFoundedIds))
+		m.metric.IncCacheMiss("GetPersons", len(notFoundedIds))
 		ids = notFoundedIds
 	}
 	findedPersonss = append(findedPersonss, persons...)

@@ -20,7 +20,7 @@ services:
     environment :
       - PGDATA=/var/lib/postgresql/data
       - POSTGRES_USER=${POSTGRES_USER}
-      - PGUSER=${PGUSER}
+      - PGUSER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=movies_persons
     healthcheck:
