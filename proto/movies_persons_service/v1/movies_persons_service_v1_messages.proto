@@ -18,7 +18,7 @@ message Person {
 }
 
 message Persons {
-  map<string, Person> persons = 1;
+  repeated Person persons = 1;
 }
 
 message UserErrorMessage { string message = 1 [ json_name = "message" ]; }

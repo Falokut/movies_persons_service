@@ -58,9 +58,9 @@ func (s *MoviesPersonsService) GetPersons(ctx context.Context,
 func (s *MoviesPersonsService) convertRepoPeopleToProto(ctx context.Context,
 	people []repository.Person) *movies_persons_service.Persons {
 	protoPersons := &movies_persons_service.Persons{}
-	protoPersons.Persons = make(map[string]*movies_persons_service.Person, len(people))
-	for _, p := range people {
-		protoPersons.Persons[p.ID] = &movies_persons_service.Person{
+	protoPersons.Persons = make([]*movies_persons_service.Person, len(people))
+	for i, p := range people {
+		protoPersons.Persons[i] = &movies_persons_service.Person{
 			ID:         p.ID,
 			FullnameRU: p.FullnameRU,
 			FullnameEN: p.FullnameEN.String,

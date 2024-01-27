@@ -95,8 +95,9 @@
       "type": "object",
       "properties": {
         "persons": {
-          "type": "object",
-          "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
             "$ref": "#/definitions/movies_persons_servicePerson"
           }
         }
