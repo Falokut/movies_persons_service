@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"net/url"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -34,15 +33,5 @@ func (s *imageService) GetPictureURL(ctx context.Context, pictureID string) stri
 		return ""
 	}
 
-	u, err := url.Parse(s.cfg.BasePhotoUrl)
-	if err != nil {
-		s.logger.Errorf("can't parse url. error: %s", err.Error())
-		return ""
-	}
-
-	q := u.Query()
-	q.Add("image_id", pictureID)
-	q.Add("category", s.cfg.PicturesCategory)
-	u.RawQuery = q.Encode()
-	return u.String()
+	return s.cfg.BasePhotoUrl + "/" + s.cfg.PicturesCategory + "/" + pictureID
 }
