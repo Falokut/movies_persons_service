@@ -47,6 +47,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 service moviesPersonsServiceV1 {
+    // Returns all persons with specified ids.
     rpc GetPersons(GetMoviePersonsRequest) returns(Persons) {
         option (google.api.http) = {
             get: "/v1/persons"

@@ -25,73 +25,78 @@ import (
 func main() {
 	logging.NewEntry(logging.ConsoleOutput)
 	logger := logging.GetLogger()
+	cfg := config.GetConfig()
 
-	appCfg := config.GetConfig()
-	logLevel, err := logrus.ParseLevel(appCfg.LogLevel)
+	logLevel, err := logrus.ParseLevel(cfg.LogLevel)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	logger.Logger.SetLevel(logLevel)
 
-	tracer, closer, err := jaegerTracer.InitJaeger(appCfg.JaegerConfig)
+	tracer, closer, err := jaegerTracer.InitJaeger(cfg.JaegerConfig)
 	if err != nil {
-		logger.Fatal("cannot create tracer", err)
+		logger.Errorf("Shutting down, error while creating tracer %v", err)
+		return
 	}
 	logger.Info("Jaeger connected")
 	defer closer.Close()
-
 	opentracing.SetGlobalTracer(tracer)
 
 	logger.Info("Metrics initializing")
-	metric, err := metrics.CreateMetrics(appCfg.PrometheusConfig.Name)
+	metric, err := metrics.CreateMetrics(cfg.PrometheusConfig.Name)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Errorf("Shutting down, error while creating metrics %v", err)
+		return
 	}
 
 	go func() {
 		logger.Info("Metrics server running")
-		if err := metrics.RunMetricServer(appCfg.PrometheusConfig.ServerConfig); err != nil {
-			logger.Fatal(err)
+		if err := metrics.RunMetricServer(cfg.PrometheusConfig.ServerConfig); err != nil {
+			logger.Errorf("Shutting down, error while running metrics server %v", err)
+			return
 		}
 	}()
 
 	logger.Info("Database initializing")
-	database, err := repository.NewPostgreDB(appCfg.DBConfig)
+	database, err := repository.NewPostgreDB(cfg.DBConfig)
 	if err != nil {
-		logger.Fatalf("Shutting down, connection to the database is not established: %s", err.Error())
+		logger.Errorf("Shutting down, connection to the database is not established: %s", err.Error())
+		return
 	}
 
 	logger.Info("Repository initializing")
 	repo := repository.NewPersonsRepository(database)
 	defer repo.Shutdown()
 
-	cache, err := repository.NewPersonsCache(logger.Logger, getCacheOptions(appCfg))
+	cache, err := repository.NewPersonsCache(logger.Logger, getCacheOptions(cfg))
 	if err != nil {
-		logger.Fatalf("Shutting down, connection to the cache is not established: %s", err.Error())
+		logger.Errorf("Shutting down, connection to the cache is not established: %s", err.Error())
+		return
 	}
 	defer cache.Shutdown()
 
 	logger.Info("Healthcheck initializing")
 	healthcheckManager := healthcheck.NewHealthManager(logger.Logger,
-		[]healthcheck.HealthcheckResource{database, cache}, appCfg.HealthcheckPort, nil)
+		[]healthcheck.HealthcheckResource{database, cache}, cfg.HealthcheckPort, nil)
 	go func() {
 		logger.Info("Healthcheck server running")
 		if err := healthcheckManager.RunHealthcheckEndpoint(); err != nil {
-			logger.Fatalf("Shutting down, can't run healthcheck endpoint %s", err.Error())
+			logger.Errorf("Shutting down, error while running healthcheck endpoint %s", err.Error())
+			return
 		}
 	}()
 	imgService := service.NewImageService(service.ImageServiceConfig{
-		BasePhotoUrl:     appCfg.ImagesService.BasePhotoUrl,
-		PicturesCategory: appCfg.ImagesService.ImagesCategory,
+		BasePhotoUrl:     cfg.ImagesService.BasePhotoUrl,
+		PicturesCategory: cfg.ImagesService.ImagesCategory,
 	}, logger.Logger)
 	repoManager := repository.NewPersonsRepositoryManager(logger.Logger, repo,
-		cache, appCfg.MoviesPeoplesCache.MoviesPersonsTTL, metric)
+		cache, cfg.MoviesPeoplesCache.MoviesPersonsTTL, metric)
 	logger.Info("Service initializing")
 	service := service.NewMoviesPersonsService(logger.Logger, repoManager, imgService)
 
 	logger.Info("Server initializing")
 	s := server.NewServer(logger.Logger, service)
-	s.Run(getListenServerConfig(appCfg), metric, nil, nil)
+	s.Run(getListenServerConfig(cfg), metric, nil, nil)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGHUP, syscall.SIGTERM)
