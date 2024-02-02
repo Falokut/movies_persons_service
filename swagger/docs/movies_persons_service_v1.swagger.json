@@ -26,6 +26,7 @@
   "paths": {
     "/v1/persons": {
       "get": {
+        "summary": "Returns all persons with specified ids.",
         "operationId": "moviesPersonsServiceV1_GetPersons",
         "responses": {
           "200": {

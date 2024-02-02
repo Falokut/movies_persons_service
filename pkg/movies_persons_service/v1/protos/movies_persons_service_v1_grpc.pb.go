@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MoviesPersonsServiceV1Client interface {
+	// Returns all persons with specified ids.
 	GetPersons(ctx context.Context, in *GetMoviePersonsRequest, opts ...grpc.CallOption) (*Persons, error)
 }
 
@@ -46,6 +47,7 @@ func (c *moviesPersonsServiceV1Client) GetPersons(ctx context.Context, in *GetMo
 // All implementations must embed UnimplementedMoviesPersonsServiceV1Server
 // for forward compatibility
 type MoviesPersonsServiceV1Server interface {
+	// Returns all persons with specified ids.
 	GetPersons(context.Context, *GetMoviePersonsRequest) (*Persons, error)
 	mustEmbedUnimplementedMoviesPersonsServiceV1Server()
 }
