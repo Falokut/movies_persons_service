@@ -2,12 +2,11 @@ package repository
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"time"
-)
 
-var ErrNotFound = errors.New("entity not found")
+	"github.com/Falokut/movies_persons_service/internal/models"
+	"github.com/sirupsen/logrus"
+)
 
 type DBConfig struct {
 	Host     string `yaml:"host" env:"DB_HOST"`
@@ -18,24 +17,61 @@ type DBConfig struct {
 	SSLMode  string `yaml:"ssl_mode" env:"DB_SSL_MODE"`
 }
 
-type Person struct {
-	ID         string         `db:"id" json:"id"`
-	FullnameRU string         `db:"fullname_ru" json:"fullname_ru"`
-	FullnameEN sql.NullString `db:"fullname_en" json:"fullname_en,omitempty"`
-	Birthday   sql.NullTime   `db:"birthday" json:"birthday,omitempty"`
-	Sex        sql.NullString `db:"sex" json:"sex,omitempty"`
-	PhotoID    sql.NullString `db:"photo_id" json:"photo_id,omitempty"`
-}
-
-type Manager interface {
-	GetPersons(ctx context.Context, ids []string) ([]Person, error)
-}
-
 type PersonsRepository interface {
-	GetPersons(ctx context.Context, ids []string) ([]Person, error)
+	GetPersons(ctx context.Context, ids []string) ([]models.RepositoryPerson, error)
 }
 
 type PersonsCache interface {
-	CachePersons(ctx context.Context, people []Person, TTL time.Duration) error
-	GetPersons(ctx context.Context, ids []string) ([]Person, []string, error)
+	CachePersons(ctx context.Context, people []models.RepositoryPerson, TTL time.Duration) error
+	GetPersons(ctx context.Context, ids []string) ([]models.RepositoryPerson, []string, error)
+}
+
+type personsRepository struct {
+	logger     *logrus.Logger
+	repo       PersonsRepository
+	cache      PersonsCache
+	personsTTL time.Duration
+}
+
+func NewPersonsRepository(logger *logrus.Logger, repo PersonsRepository, cache PersonsCache,
+	personsTTL time.Duration) *personsRepository {
+	return &personsRepository{
+		logger:     logger,
+		repo:       repo,
+		cache:      cache,
+		personsTTL: personsTTL,
+	}
+}
+
+func (r *personsRepository) GetPersons(ctx context.Context, ids []string) (persons []models.RepositoryPerson, err error) {
+	var findedPersons = make([]models.RepositoryPerson, 0, len(ids))
+	persons, notFoundedIds, err := r.cache.GetPersons(ctx, ids)
+	if err != nil {
+		r.logger.Error(err)
+	}
+
+	if len(persons) == len(ids) {
+		return persons, nil
+	}
+
+	if len(persons) != 0 && err == nil {
+		ids = notFoundedIds
+	}
+
+	findedPersons = append(findedPersons, persons...)
+
+	persons, err = r.repo.GetPersons(ctx, ids)
+	if err != nil {
+		return
+	}
+
+	go func() {
+		err := r.cache.CachePersons(context.Background(), persons, r.personsTTL)
+		if err != nil {
+			r.logger.Errorf("error while cachin persons: %v", err)
+		}
+	}()
+
+	findedPersons = append(findedPersons, persons...)
+	return findedPersons, nil
 }

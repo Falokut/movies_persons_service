@@ -6,20 +6,17 @@ import (
 
 	"github.com/Falokut/movies_persons_service/internal/repository"
 	"github.com/Falokut/movies_persons_service/pkg/jaeger"
+	"github.com/Falokut/movies_persons_service/pkg/logging"
 	"github.com/Falokut/movies_persons_service/pkg/metrics"
-	logging "github.com/Falokut/online_cinema_ticket_office.loggerwrapper"
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
 	LogLevel        string `yaml:"log_level" env:"LOG_LEVEL"`
 	HealthcheckPort string `yaml:"healthcheck_port" env:"HEALTHCHECK_PORT"`
-
-	ImagesService struct {
-		BasePhotoUrl   string `yaml:"base_photo_url" env:"BASE_PHOTO_URL"`
-		ImagesCategory string `yaml:"pictures_category" env:"PICTURES_CATEGORY"`
-	} `yaml:"images_service"`
-	Listen struct {
+	BasePhotoURL    string `yaml:"base_photo_url" env:"BASE_PHOTO_URL"`
+	PhotoCategory   string `yaml:"photo_category" env:"PHOTO_CATEGORY"`
+	Listen          struct {
 		Host string `yaml:"host" env:"HOST"`
 		Port string `yaml:"port" env:"PORT"`
 		Mode string `yaml:"server_mode" env:"SERVER_MODE"` // support GRPC, REST, BOTH
@@ -30,7 +27,7 @@ type Config struct {
 		ServerConfig metrics.MetricsServerConfig `yaml:"server_config"`
 	} `yaml:"prometheus"`
 
-	MoviesPeoplesCache struct {
+	MoviesPersonsCache struct {
 		Network          string        `yaml:"network" env:"MOVIES_PERSONS_CACHE_NETWORK"`
 		Addr             string        `yaml:"addr" env:"MOVIES_PERSONS_CACHE_ADDR"`
 		Password         string        `yaml:"password" env:"MOVIES_PERSONS_CACHE_PASSWORD"`

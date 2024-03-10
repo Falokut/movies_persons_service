@@ -10,12 +10,15 @@ import (
 	server "github.com/Falokut/grpc_rest_server"
 	"github.com/Falokut/healthcheck"
 	"github.com/Falokut/movies_persons_service/internal/config"
+	"github.com/Falokut/movies_persons_service/internal/handler"
 	"github.com/Falokut/movies_persons_service/internal/repository"
+	"github.com/Falokut/movies_persons_service/internal/repository/postgresrepository"
+	"github.com/Falokut/movies_persons_service/internal/repository/rediscache"
 	"github.com/Falokut/movies_persons_service/internal/service"
 	jaegerTracer "github.com/Falokut/movies_persons_service/pkg/jaeger"
+	"github.com/Falokut/movies_persons_service/pkg/logging"
 	"github.com/Falokut/movies_persons_service/pkg/metrics"
 	movies_persons_service "github.com/Falokut/movies_persons_service/pkg/movies_persons_service/v1/protos"
-	logging "github.com/Falokut/online_cinema_ticket_office.loggerwrapper"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/opentracing/opentracing-go"
 	"github.com/redis/go-redis/v9"
@@ -52,25 +55,25 @@ func main() {
 	shutdown := make(chan error, 1)
 	go func() {
 		logger.Info("Metrics server running")
-		if err := metrics.RunMetricServer(cfg.PrometheusConfig.ServerConfig); err != nil {
-			logger.Errorf("Shutting down, error while running metrics server %v", err)
-			shutdown <- err
+		if serr := metrics.RunMetricServer(cfg.PrometheusConfig.ServerConfig); serr != nil {
+			logger.Errorf("Shutting down, error while running metrics server %v", serr)
+			shutdown <- serr
 			return
 		}
 	}()
 
 	logger.Info("Database initializing")
-	database, err := repository.NewPostgreDB(cfg.DBConfig)
+	database, err := postgresrepository.NewPostgreDB(&cfg.DBConfig)
 	if err != nil {
 		logger.Errorf("Shutting down, connection to the database is not established: %s", err.Error())
 		return
 	}
+	defer database.Close()
 
 	logger.Info("Repository initializing")
-	repo := repository.NewPersonsRepository(database)
-	defer repo.Shutdown()
+	personsRepository := postgresrepository.NewPersonsRepository(logger.Logger, database)
 
-	cache, err := repository.NewPersonsCache(logger.Logger, getCacheOptions(cfg))
+	cache, err := rediscache.NewPersonsCache(logger.Logger, getCacheOptions(cfg), metric)
 	if err != nil {
 		logger.Errorf("Shutting down, connection to the cache is not established: %s", err.Error())
 		return
@@ -88,20 +91,25 @@ func main() {
 			return
 		}
 	}()
-	imgService := service.NewImageService(service.ImageServiceConfig{
-		BasePhotoUrl:     cfg.ImagesService.BasePhotoUrl,
-		PicturesCategory: cfg.ImagesService.ImagesCategory,
-	}, logger.Logger)
-	repoManager := repository.NewPersonsRepositoryManager(logger.Logger, repo,
-		cache, cfg.MoviesPeoplesCache.MoviesPersonsTTL, metric)
+	repo := repository.NewPersonsRepository(logger.Logger, personsRepository,
+		cache, cfg.MoviesPersonsCache.MoviesPersonsTTL)
+
 	logger.Info("Service initializing")
-	service := service.NewMoviesPersonsService(logger.Logger, repoManager, imgService)
+	s := service.NewMoviesPersonsService(logger.Logger,
+		repo, service.MoviesPersonsServiceConfig{
+			BasePhotoURL:     cfg.BasePhotoURL,
+			PicturesCategory: cfg.PhotoCategory,
+		})
+
+	logger.Info("Handler initializing")
+	h := handler.NewMoviesPersonsServiceHandler(s)
+
 	logger.Info("Server initializing")
-	s := server.NewServer(logger.Logger, service)
+	serv := server.NewServer(logger.Logger, h)
 	go func() {
-		if err := s.Run(getListenServerConfig(cfg), metric, nil, nil); err != nil {
-			logger.Errorf("Shutting down, error while running server %s", err.Error())
-			shutdown <- err
+		if serr := serv.Run(getListenServerConfig(cfg), metric, nil, nil); serr != nil {
+			logger.Errorf("Shutting down, error while running server %s", serr.Error())
+			shutdown <- serr
 			return
 		}
 	}()
@@ -116,7 +124,7 @@ func main() {
 		break
 	}
 
-	s.Shutdown()
+	serv.Shutdown()
 }
 
 func getListenServerConfig(cfg *config.Config) server.Config {
@@ -130,7 +138,7 @@ func getListenServerConfig(cfg *config.Config) server.Config {
 			if !ok {
 				return errors.New("can't convert")
 			}
-			return movies_persons_service.RegisterMoviesPersonsServiceV1HandlerServer(context.Background(),
+			return movies_persons_service.RegisterMoviesPersonsServiceV1HandlerServer(ctx,
 				mux, serv)
 		},
 	}
@@ -138,9 +146,9 @@ func getListenServerConfig(cfg *config.Config) server.Config {
 
 func getCacheOptions(cfg *config.Config) *redis.Options {
 	return &redis.Options{
-		Network:  cfg.MoviesPeoplesCache.Network,
-		Addr:     cfg.MoviesPeoplesCache.Addr,
-		Password: cfg.MoviesPeoplesCache.Password,
-		DB:       cfg.MoviesPeoplesCache.DB,
+		Network:  cfg.MoviesPersonsCache.Network,
+		Addr:     cfg.MoviesPersonsCache.Addr,
+		Password: cfg.MoviesPersonsCache.Password,
+		DB:       cfg.MoviesPersonsCache.DB,
 	}
 }

@@ -28,7 +28,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 			description: "Returned when the resource does not exist.";
 			schema: {
 				json_schema: {
-					ref: "#/definitions/rpcStatus";
+					ref: "#/definitions/googlerpcStatus";
 				}
 			}
 		}
@@ -39,7 +39,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 			description: "Something went wrong.";
 			schema: {
 				json_schema: {
-					ref: "#/definitions/rpcStatus";
+					ref: "#/definitions/googlerpcStatus";
 				}
 			}
 		}
