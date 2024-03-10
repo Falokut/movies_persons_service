@@ -42,7 +42,7 @@ func (s *moviesPersonsService) GetPersons(ctx context.Context, ids []string) (pe
 			FullnameEN: repopersons[i].FullnameEN,
 			Birthday:   repopersons[i].Birthday,
 			Sex:        repopersons[i].Sex,
-			PhotoURL:   getPictureURL(repopersons[i].ID, s.cfg.BasePhotoURL, s.cfg.PicturesCategory),
+			PhotoURL:   getPictureURL(repopersons[i].PhotoID, s.cfg.BasePhotoURL, s.cfg.PicturesCategory),
 		}
 	}
 	return
