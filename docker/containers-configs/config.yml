@@ -1,16 +1,15 @@
 log_level: "debug" # supported levels: "panic", "fatal", "error", "warning" or "warn", "info", "debug", "trace"
 healthcheck_port: 7001
 
-images_service:
-  base_photo_url: "http://localhost:80/image"
-  pictures_category: "person_photo"
-  
+base_photo_url: "http://localhost:80/image"
+photo_category: "person_photo"
+
 listen:
   host: 0.0.0.0
   port: 8080
   server_mode: "BOTH"
-  
-db_config: 
+
+db_config:
   host: "movies_persons_db"
   port: "5432"
   username: "movies_persons_service"
@@ -28,10 +27,8 @@ prometheus:
     host: 0.0.0.0
     port: 7000
 
-
-movies_persons_cache: 
+movies_persons_cache:
   network: "tcp"
   addr: "redis:6379"
   db: 0
   movies_persons_ttl: 30m
-

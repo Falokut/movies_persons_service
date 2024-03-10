@@ -1,6 +1,6 @@
 module github.com/Falokut/movies_persons_service
 
-go 1.21.4
+go 1.22.0
 
 require (
 	github.com/Falokut/grpc_rest_server v1.0.9
